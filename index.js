@@ -15,6 +15,8 @@ const { clipboard } = require('electron');
  */
 module.exports = class UploadToCloud extends Plugin {
   startPlugin () {
+    this.currentChunk = 0;
+    this.chunkSize = 5e+6; // 5 MB
     this.patchSlateContext();
   }
 
@@ -34,17 +36,19 @@ module.exports = class UploadToCloud extends Plugin {
     formData.append('fuid', fuid);
     formData.append('file_name', file.name);
     formData.append('file_type', filetype[0]);
-    formData.append('total_chunks', 1);
+    formData.append('total_chunks', this.currentChunk + 1);
 
     request.open('POST', 'https://up.ufile.io/v1/upload/finalise');
 
     request.onload = () => {
       // eslint-disable-next-line eqeqeq
       if (request.status == 200) {
-        powercord.api.notices.sendToast('uploadToCloud', { header: 'Upload Successful!',
+        powercord.api.notices.sendToast('uploadToCloud', {
+          header: 'Upload Successful!',
           content: 'Link copied to clipboard.',
           type: 'success',
-          timeout: 3000 });
+          timeout: 3000 }
+        );
 
         clipboard.writeText(JSON.parse(request.response).url);
       }
@@ -67,16 +71,35 @@ module.exports = class UploadToCloud extends Plugin {
 
     const formData = new FormData();
 
-    formData.append('chunk_index', 1);
+    formData.append('chunk_index', this.currentChunk + 1);
     formData.append('fuid', fuid);
-    formData.append('file', file);
+
+    const lastChunk = (file.size - (this.chunkSize * this.currentChunk)) < this.chunkSize;
+
+    if (!lastChunk) {
+      formData.append('file', file.slice(this.chunkSize * this.currentChunk, this.chunkSize * (this.currentChunk + 1)));
+    } else {
+      formData.append('file', file.slice(this.chunkSize * this.currentChunk, file.size));
+    }
 
     request.open('POST', 'https://up.ufile.io/v1/upload/chunk');
 
     request.onload = () => {
     // eslint-disable-next-line eqeqeq
       if (request.status == 200) {
-        this.finaliseUpload(fuid, file);
+        if (!lastChunk) {
+          this.currentChunk++;
+          this.uploadFile(fuid, file);
+        } else {
+          this.finaliseUpload(fuid, file);
+        }
+      } else {
+        powercord.api.notices.sendToast('uploadToCloud', {
+          header: 'Upload Failure!',
+          content: 'Something went wrong.',
+          type: 'error',
+          timeout: 3000 }
+        );
       }
     };
 
@@ -99,6 +122,7 @@ module.exports = class UploadToCloud extends Plugin {
     request.onload = () => {
     // eslint-disable-next-line eqeqeq
       if (request.status == 200) {
+        this.currentChunk = 0;
         this.uploadFile(JSON.parse(request.response).fuid, file);
       }
     };
