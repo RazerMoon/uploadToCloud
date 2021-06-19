@@ -67,7 +67,6 @@ module.exports = class UploadToCloud extends Plugin {
  * @param {File} file
  */
   uploadFile (fuid, file) {
-  // TODO: Split large files in seperate chunks
   // TODO: Add progress indicator
 
     /** @type {XMLHttpRequest} */

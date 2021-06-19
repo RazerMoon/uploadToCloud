@@ -1,10 +1,6 @@
 const { React } = require('powercord/webpack');
 const { TextInput } = require('powercord/components/settings');
 
-// eslint-disable-next-line no-warning-comments
-// TODO: Make the channel items more distinct/seperate from the actual settings
-// eslint-disable-next-line no-warning-comments
-// TODO: Add avatar preview
 module.exports = ({ getSetting, updateSetting }) => {
   const [ chunkSize, setchunkSize ] = React.useState(getSetting('chunkSize', 5e+6).toString());
 
