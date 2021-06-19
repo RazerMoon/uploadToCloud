@@ -4,6 +4,7 @@ const { Plugin } = require('powercord/entities');
 const { inject, uninject } = require('powercord/injector');
 const { findInReactTree } = require('powercord/util');
 const { clipboard } = require('electron');
+const Settings = require('./ui/Settings.jsx');
 
 // ? https://help.ufile.io/en/article/upload-files-1p925sk/
 
@@ -15,8 +16,11 @@ const { clipboard } = require('electron');
  */
 module.exports = class UploadToCloud extends Plugin {
   startPlugin () {
-    this.currentChunk = 0;
-    this.chunkSize = 5e+6; // 5 MB
+    powercord.api.settings.registerSettings(this.entityID, {
+      category: this.entityID,
+      label: 'Upload to Cloud',
+      render: Settings
+    });
     this.patchSlateContext();
   }
 
@@ -123,6 +127,7 @@ module.exports = class UploadToCloud extends Plugin {
     // eslint-disable-next-line eqeqeq
       if (request.status == 200) {
         this.currentChunk = 0;
+        this.chunkSize = this.settings.get('chunkSize', 5e+6);
         this.uploadFile(JSON.parse(request.response).fuid, file);
       }
     };
@@ -167,5 +172,6 @@ module.exports = class UploadToCloud extends Plugin {
 
   pluginWillUnload () {
     uninject('uploadtocloud-slatecm-patch');
+    powercord.api.settings.unregisterSettings(this.entityID);
   }
 };

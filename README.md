@@ -8,12 +8,10 @@ Files are uploaded to [UFile.io](https://ufile.io/), find out about limits [here
 
 ## Features
 
-* [x] Chunking! Large files get split up into smaller pieces which lets you upload large files.
+* [x] Chunking! Large files get split up into smaller pieces when uploading.
 
 ## Currently in Beta
 
 * Not much testing has been done, there are likely many bugs to resolve
-
-* Optional API key not implemented
 
 * No progress indicator
