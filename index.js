@@ -21,7 +21,7 @@ module.exports = class UploadToCloud extends Plugin {
       label: 'Upload to Cloud',
       render: Settings
     });
-    this.patchSlateContext();
+    this.patchAttachMenu();
   }
 
   /**
@@ -144,15 +144,14 @@ module.exports = class UploadToCloud extends Plugin {
     }
   }
 
-  async patchSlateContext () {
+  async patchAttachMenu () {
     const Menu = await getModule((m) => (m.__powercordOriginal_default || m.default)?.displayName === 'Menu');
-    const CM = await getModule((m) => (m.__powercordOriginal_default || m.default)?.displayName === 'SlateTextAreaContextMenu');
+    const mod = await getModule((m) => (m.__powercordOriginal_default || m.default)?.displayName === 'ChannelAttachMenu');
 
-    inject('uploadtocloud-slatecm-patch', CM, 'default', (_req, res) => {
+    inject('uploadtocloud-attachmenu-patch', mod, 'default', (_req, res) => {
       if (!res) {
         return res;
       }
-
       const hasUploadButton = findInReactTree(res.children, child => child.props && child.props.id === 'upload');
 
       if (!hasUploadButton) {
@@ -162,7 +161,7 @@ module.exports = class UploadToCloud extends Plugin {
           action: () => this.handleClick()
         });
 
-        res.props.children.splice(res.props.children.length - 1, 0, [ React.createElement(Menu.MenuSeparator), React.createElement(Menu.MenuGroup, {}, uploadButton) ]);
+        res.props.children.splice(res.props.children.length - 1, 0, [ React.createElement(Menu.MenuGroup, {}, uploadButton), React.createElement(Menu.MenuSeparator) ]);
       }
 
       return res;
@@ -170,7 +169,7 @@ module.exports = class UploadToCloud extends Plugin {
   }
 
   pluginWillUnload () {
-    uninject('uploadtocloud-slatecm-patch');
+    uninject('uploadtocloud-attachmenu-patch');
     powercord.api.settings.unregisterSettings(this.entityID);
   }
 };
