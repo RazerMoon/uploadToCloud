@@ -9,6 +9,7 @@ Files are uploaded to [UFile.io](https://ufile.io/), find out about limits [here
 ## Features
 
 * [x] Chunking! Large files get split up into smaller pieces when uploading.
+* [x] Multiple file hosting providers.
 
 ## Currently in Beta
 

@@ -1,6 +1,6 @@
 {
   "name": "Upload to Cloud",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Upload files to the cloud",
   "author": "RazerMoon",
   "permissions": "ext_api",
