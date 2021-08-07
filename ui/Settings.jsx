@@ -1,11 +1,16 @@
 const { React } = require('powercord/webpack');
-const { TextInput, SelectInput } = require('powercord/components/settings');
+const { TextInput, SelectInput, ButtonItem } = require('powercord/components/settings');
 
 module.exports = ({ getSetting, updateSetting }) => {
   const [ chunkSize, setchunkSize ] = React.useState(getSetting('chunkSize', 5e+6).toString());
   const [ provider, setProvider ] = React.useState(getSetting('provider', 'UFile.io'));
+  const [ urlToCheck, setUrlToCheck ] = React.useState('https://api.gofile.io/getServer');
+
+  const URLRegex = new RegExp(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/);
 
   const isValid = (value) => !isNaN(value) && value >= 1e+6 && value <= 1e+9; // Bigger than 1 MB smaller than 1 GB
+
+  const isValidURL = (value) => URLRegex.test(value);
 
   const options = [
     { label: 'UFile.io (Chunking)',
@@ -45,6 +50,50 @@ module.exports = ({ getSetting, updateSetting }) => {
       >
         Provider
       </SelectInput>
+
+      <TextInput
+        note="Check if an upload URL can be used by Discord (make sure to include http/https)"
+        defaultValue={urlToCheck}
+        style={isValidURL(urlToCheck) ? { } : { borderColor: 'red' }}
+        onChange={(value) => {
+          setUrlToCheck(value);
+        }}
+      >
+      URL Checker
+      </TextInput>
+      <ButtonItem
+        button="Do it"
+        onClick={async () => {
+          try {
+            const request = await fetch(urlToCheck);
+
+            if (request.status !== 404) {
+              powercord.api.notices.sendToast('uploadToCloud', {
+                header: 'Link works!',
+                content: 'You can suggest it in the repo.',
+                type: 'success',
+                timeout: 3000 }
+              );
+            } else {
+              powercord.api.notices.sendToast('uploadToCloud', {
+                header: 'Link doesn\'t work!',
+                content: 'Don\'t suggest it.',
+                type: 'error',
+                timeout: 3000 }
+              );
+            }
+          } catch (err) {
+            powercord.api.notices.sendToast('uploadToCloud', {
+              header: 'Link doesn\'t work!',
+              content: 'Don\'t suggest it.',
+              type: 'error',
+              timeout: 3000 }
+            );
+          }
+        }}
+      >
+        Check URL
+      </ButtonItem>
     </div>
   );
 };
